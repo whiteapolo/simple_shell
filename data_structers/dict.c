@@ -1,12 +1,13 @@
 #include "dict.h"
+#include "lll.h"
 
-#define FREE_INFO(info, fun) do { if (fun != NULL) fun(info); } while (0)
-
-void (*g_print_info)(void *) = NULL;
+static void (*g_free_info)(void *) = NULL;
+static void (*g_print_info)(void *) = NULL;
 
 void free_val(void *val)
 {
-	free(((Val*)val)->info);
+	if (g_free_info)
+		g_free_info(((Val*)val)->info);
 	free(((Val*)val)->key);
 	free((Val*)val);
 }
@@ -14,7 +15,8 @@ void free_val(void *val)
 void print_val(void *val)
 {
 	printf("KEY: %s, VALUE: ", ((Val*)val)->key);
-	g_print_info(((Val*)val)->info);
+	if (g_print_info)
+		g_print_info(((Val*)val)->info);
 	putchar('\n');
 }
 
@@ -33,8 +35,9 @@ void dict_insert(Dict *dict, char *key, void *info)
 	lll_push(&dict->managers[h], val);
 }
 
-void dict_remove(Dict *dict, char *key)
+void dict_remove(Dict *dict, char *key, void (*free_info)(void *))
 {
+	g_free_info = free_info;
 	int h = hash(key) % dict->size;
 	lll_t *curr = dict->managers[h];
 	lll_t *pre = NULL;
@@ -45,9 +48,9 @@ void dict_remove(Dict *dict, char *key)
 
 	if (curr != NULL)
 		if (pre == NULL)
-			FREE_INFO(lll_pop(&dict->managers[h]), free_val);
+			free_val(lll_pop(&dict->managers[h]));
 		else
-			FREE_INFO(lll_remove_after(pre), free_val);
+			free_val(lll_remove_after(pre));
 }
 
 void *dict_find(Dict *dict, char *key)
@@ -76,8 +79,9 @@ void dict_print(Dict *dict, void (*print_info)(void *))
 			puts("----------------");
 }
 
-void dict_destroy(Dict *dict)
+void dict_destroy(Dict *dict, void (*free_info)(void *))
 {
+	g_free_info = free_info;
 	for (int i = 0; i < dict->size; i++)
 		if (dict->managers[i])
 			lll_clear(&dict->managers[i], free_val);

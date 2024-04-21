@@ -45,6 +45,11 @@ static Token *get_token(lll_t *l)
 	return l->info;
 }
 
+static lll_t *tokinize2(const char *str)
+{
+
+}
+
 static lll_t *tokinize(const char *str)
 {
 	lll_t *start;

@@ -7,91 +7,62 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "string_builder.h"
+#include <wh/macros.h>
 
-int get_program_path(const char *exe, char *pw);
-bool excute_in_dict(char **argv);
-void cd(char **argv);
-void exit_ex(char **argv);
+int p_cd(char **argv);
+int p_exit(char **argv);
 
 void argv_free(char **argv);
+void argv_print(char **argv);
 
 typedef struct {
 	char *name;
-	void (*fun)(char**);
+	int (*fun)(char**);
 } Program;
 
 Program programs[] = {
-	{"cd", cd},
-	{"exit", exit_ex},
+	{"cd", p_cd},
+	{"exit", p_exit},
 };
 
 static Dict programs_dict;
-static char *home_path;
 static bool should_exit = false;
 
-#define IS_FILE_EXISTS(p) (!access(p, F_OK))
+#define FILE_EXISTS(p) (!access(p, F_OK))
 
-
-void shell_init(char *home)
+void shell_init()
 {
-	home_path = home;
-
 	dict_init(&programs_dict, ARRAY_SIZE(programs));
 
 	FOR(i, ARRAY_SIZE(programs))
 		dict_insert(&programs_dict, programs[i].name, programs[i].fun);
-
-	/* completion_tree_init(programs_tree); */
-	/* *files_tree = NULL; */
-	/* shell_update_files_completion_tree(files_tree); */
 }
-
-/* void shell_update_files_completion_tree(Completion_tree **files) */
-/* { */
-/* 	completion_tree_destory(files); */
-/* 	completion_tree_init(files); */
-/* 	/1* add programs to tree *1/ */
-/* } */
-
-int get_program_path(const char *exe, char *pw)
-{
-	FOR (i, ARRAY_SIZE(g_path)) {
-		strcpy(pw, g_path[i]);
-		strcat(pw, exe);
-		if (IS_FILE_EXISTS(pw))
-			return 0;
-	}
-	return 1;
-}
-
 
 int excute(char **argv, bool in_background)
 {
+	int exit_status;
+	int (*fun)(char**) = NULL;
+
 	if (*argv == NULL)
 		return 0;
 
-	/* argv_print(argv); */
-	int exit_status;
-
-	char pw[256];
-	if (!excute_in_dict(argv)) {
-		if (!get_program_path(*argv, pw)) {
-			if (fork()) {
-				if (!in_background)
-					wait(&exit_status);
-			} else {
-				execve(pw, argv, env);
-			}
+	if ((fun = dict_find(&programs_dict, *argv))) {
+		exit_status = fun(argv);
+	} else {
+		if (fork()) {
+			if (!in_background)
+				wait(&exit_status);
 		} else {
+			execvp(argv[0], argv);
 			printf("command doesnt exists: %s\n", *argv);
+			exit(1);
 		}
 	}
 	return exit_status;
 }
 
-void shell_excute(lll_t *tokens, char **env)
+void shell_excute(lll_t *tokens)
 {
-
 	lll_t *cnt = tokens;
 	char **argv;
 
@@ -141,32 +112,19 @@ void argv_free(char **argv)
 	free(argv);
 }
 
-void argv_print(char **argv)
-{
-	while (*argv)
-		printf("%s\n", *(argv++));
-}
-
-bool excute_in_dict(char **argv)
-{
-	void (*fun)(char**) = dict_find(&programs_dict, *argv);
-	if (fun) {
-		fun(argv);
-		return true;
-	} else {
-		return false;
-	}
-}
-
 bool shell_should_exit()
 {
 	return should_exit;
 }
 
 // Programs
-void cd(char **argv)
+int p_cd(char **argv)
 {
 	char p[256];
+	const char *home_path = getenv("HOME");
+
+	if (home_path == NULL)
+		home_path = ".";
 
 	if (argv[1] == NULL)
 		strcpy(p, home_path);
@@ -175,13 +133,24 @@ void cd(char **argv)
 	else
 		strcpy(p, argv[1]);
 
-	if (IS_FILE_EXISTS(p))
+	if (FILE_EXISTS(p)) {
 		chdir(p);
-	else
+	} else {
 		printf("cd: no such file or directory: %s\n", p);
+		return 1;
+	}
+	return 0;
 }
 
-void exit_ex(char **argv)
+int p_exit(char **argv)
 {
 	should_exit = true;
+	return 0;
+}
+
+// debigging
+void argv_print(char **argv)
+{
+	while (*argv)
+		printf("%s\n", *(argv++));
 }

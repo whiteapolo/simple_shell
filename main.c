@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include "data_structers/lll.h"
 #include "io.h"
@@ -11,30 +13,45 @@
 #define IS_NOT_EMPTY_STRING(str) (str && *str)
 
 static char *home_path;
+static char *path;
+static char path_len = 1;
 
-
-char *get_home_path()
+void append_path(const char *p)
 {
-	return strcat(strdup(getpwuid(geteuid())->pw_dir), "/");
+	path_len += strlen(p) + 2;
+	REALLOC(path, char, path_len);
+	strcat(path, ":");
+	strcat(path, p);
+	setenv("PATH", path, 1);
 }
 
-void main(void)
+void env_init()
+{
+	setenv("HOME", strdup(getpwuid(geteuid())->pw_dir), 1);
+	append_path("/bin");
+	append_path("/usr/bin");
+	append_path("/usr/local/bin");
+	append_path("/home/white/.local/bin");
+	append_path("/home/white/archive/.scripts");
+}
+
+int main(void)
 {
 	char *cmd;
 	lll_t *tokens;
-	char *home_path = get_home_path();
+	path = CALLOC(char, path_len);
 
-	shell_init(home_path);
+	env_init();
+	shell_init();
 	alias_init();
-	io_init(home_path);
+	io_init();
 
 	while (!shell_should_exit()) {
-		/* shell_update_files_completion_tree(&files); */
 		cmd = io_input_command();
 		if (IS_NOT_EMPTY_STRING(cmd)) {
 			tokens = tokinize(cmd);
 			alias_proccess(&tokens);
-			shell_excute(tokens, env);
+			shell_excute(tokens);
 			lll_clear(&tokens, free);
 		}
 		free(cmd);

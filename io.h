@@ -13,16 +13,13 @@
 #include "readline.h"
 #include <string.h>
 
-static char *home_path;
-
-void io_init(char *home);
+void io_init();
 char *io_input_command();
 char *get_promt();
 
-void io_init(char *home)
+void io_init()
 {
 	CURSOR_TO_BLOCK();
-	home_path = home;
 	ReadLineInit(NULL);
 }
 
@@ -38,17 +35,19 @@ char *get_promt()
 {
 	char *p = MALLOC(char, 256);
 	char *cwd = getcwd(NULL, 256);
-	char *home_cpy = strndup(home_path, strlen(home_path) - 1);
-	char *normalize_path = strcut(cwd, home_cpy, "~");
+	char *normalize_path = NULL;
+	const char *home_path = getenv("HOME");
 
-	if (normalize_path) {
-		SWAP(normalize_path, cwd);
-		free(normalize_path);
+	if (home_path != NULL) {
+		normalize_path = strcut(cwd, home_path, "~");
+		if (normalize_path) {
+			SWAP(normalize_path, cwd);
+			free(normalize_path);
+		}
 	}
 
 	strcat(strcpy(p, cwd), promt);
 
-	free(home_cpy);
 	free(cwd);
 
 	return p;

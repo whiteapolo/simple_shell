@@ -13,9 +13,8 @@
 #include "config.h"
 #include "lexer.h"
 
-void shell_init(char *home);
-void shell_excute(lll_t *tokens, char **env);
+void shell_init();
+void shell_excute(lll_t *tokens);
 bool shell_should_exit();
-/* void shell_update_files_completion_tree(Completion_tree **files); */
 
 #endif

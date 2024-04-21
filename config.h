@@ -6,12 +6,12 @@ static const char *promt = " $ ";
 static int history_size = 500;
 
 static char *env[] = {
-#include "env.agl"
+	"", /* saved for path */
+/* #include "env.agl" */
 	NULL,
 };
 
 static const char *g_path[] = {
-	"",
 	"/bin/",
 	"/usr/local/bin/",
 };
