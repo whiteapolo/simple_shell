@@ -46,20 +46,19 @@ void dict_remove(Dict *dict, char *key, void (*free_info)(void *))
 		curr = curr->next;
 	}
 
-	if (curr != NULL)
+	if (curr != NULL) {
 		if (pre == NULL)
 			free_val(lll_pop(&dict->managers[h]));
 		else
 			free_val(lll_remove_after(pre));
+	}
 }
 
-void *dict_find(Dict *dict, char *key)
+void *dict_find(Dict *dict, const char *key)
 {
 	int h = hash(key) % dict->size;
 	lll_t *curr = dict->managers[h];
-	lll_t *pre = NULL;
 	while (curr != NULL && strcmp(((Val*)(curr->info))->key, key)) {
-		pre = curr;
 		curr = curr->next;
 	}
 

@@ -67,6 +67,11 @@ void lll_print(lll_t *l, void(*print_info)(void*))
 	}
 }
 
+void lll_insert_lll_after(lll_t *l, lll_t *a)
+{
+
+}
+
 lll_t *lll_get_last(lll_t *l)
 {
 	while (l->next)

@@ -1,17 +1,16 @@
 #include "trie.h"
+#include "lll.h"
 #include <stdbool.h>
-
-void TrieInit(Trie **t)
-{
-	*t = TrieCreateNode(0, NULL);
-}
+#include <stdlib.h>
+#include <string.h>
+#include "string_builder.h"
 
 Trie *TrieCreateNode(char letter, void *info)
 {
 	Trie *t = MALLOC(Trie, 1);
 	lll_init(&t->children);
 	t->letter = letter;
-	t->info = info;
+	t->str = info;
 	return t;
 }
 
@@ -26,21 +25,15 @@ Trie *TrieGetiChild(Trie *t, char letter)
 	return NULL;
 }
 
-/* void print_info(void *info) */
-/* { */
-/* 	printf("INFO: %c \n", ((Trie*)info)->letter); */
-/* } */
-
-void *TrieGet(Trie *t, char *str)
+bool TrieExists(Trie *t, const char *str)
 {
 	Trie *cnt = t;
 	while (*(str)) {
-		/* lll_print(cnt->children, print_info); */
 		if ((cnt = TrieGetiChild(cnt, *str)) == NULL)
-			return NULL;
+			return false;
 		str++;
 	}
-	return cnt->info;
+	return true;
 }
 
 void *TrieAddiChild(Trie *t, char letter, void *info)
@@ -49,38 +42,71 @@ void *TrieAddiChild(Trie *t, char letter, void *info)
 	return t->children->info;
 }
 
-void TrieAdd(Trie *t, char *str, void *info)
+void TrieAdd(Trie *t, const char *str)
 {
 	Trie *cnt = t;
-	Trie *tmp = cnt;
-	while (*(str)) {
+	Trie *father = cnt;
+	const char *str_start = str;
+
+	while (*str) {
 		if ((cnt = TrieGetiChild(cnt, *str)) == NULL) {
-			cnt = TrieAddiChild(tmp, *str, NULL);
+			cnt = TrieAddiChild(father, *str, NULL);
 		}
-		tmp = cnt;
+		father = cnt;
 		str++;
 	}
+
 	cnt->letter = *(str-1);
-	cnt->info = info;
+
+	cnt->str = strdup(str_start);
 }
 
-/* free info can be null */
-void TrieDestroy(Trie *t, void (*free_info)(void *))
+void TrieCollectInfos(Trie *t, StringBuilder *sb)
 {
-	/* print_info(t); */
+	if (t == NULL)
+		return;
+
+	if (t->str != NULL)
+		StringBuilderAppend(sb, t->str);
+
 	lll_t *cnt = t->children;
-	while (cnt) {
-		TrieDestroy(cnt->info, free_info);
+	while (cnt != NULL) {
+		TrieCollectInfos(cnt->info, sb);
 		cnt = cnt->next;
 	}
-	if (t->children != NULL) {
-		lll_clear(&t->children, NULL);
-	}
-	if (free_info != NULL)
-		free_info(t->info);
-	free(t);
-	t = NULL;
 }
+
+char **TrieGetAllMatches(Trie *t, const char *str, int *size)
+{
+	*size = 0;
+	Trie *cnt = t;
+	while (*(str)) {
+		if ((cnt = TrieGetiChild(cnt, *str)) == NULL)
+			return NULL;
+		str++;
+	}
+
+	StringBuilder *sb = StringBuilderCreate();
+	TrieCollectInfos(cnt, sb);
+	*size = sb->size;
+
+	return StringBuilderToStrings(sb, true);
+}
+
+void _TrieDestroy(void *t)
+{
+	if (((Trie*)t)->children != NULL)
+		lll_clear(&((Trie*)t)->children, _TrieDestroy);
+	free(((Trie*)t)->str);
+	free(t);
+}
+
+void TrieDestroy(Trie *t)
+{
+	if (t->children != NULL)
+		lll_clear(&t->children, _TrieDestroy);
+}
+
 
 bool TrieIsLeaf(Trie *t)
 {

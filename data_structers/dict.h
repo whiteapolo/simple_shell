@@ -54,7 +54,7 @@ void dict_insert(Dict *dict, char *key, void *info);
 void dict_remove(Dict *dict, char *key, void (*free_info)(void *));
 
 // if vlaue doesnt exists for this key, NULL will be returned
-void *dict_find(Dict *dict, char *key);
+void *dict_find(Dict *dict, const char *key);
 
 // free the memory, if you want to free the info, pass a function to do so
 // you can pass libc `free` function

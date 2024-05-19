@@ -5,12 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <wh/macros.h>
 #include <string.h>
 #include <termios.h>
 #include <pwd.h>
 
-#include "cursors.h"
+#include "types.h"
+#include "data_structers/dict.h"
+#include "data_structers/trie.h"
 
 #define KEY_TAB 	9
 #define KEY_CONTROL_L 	12
@@ -21,9 +22,9 @@
 #define KEY_ARROW_RIGHT 130
 #define KEY_ARROW_LEFT 	131
 
-// Public Functions
-char *ReadLine(const char *promt);
-void ReadLineInit(const char *(*syntax_func)(const char *line));
+char *ReadLine(const char *promt, Dict *highlight_dict);
+void ReadLineSetSyntaxTrie(Trie *syntax_trie);
+void ReadLineInit();
 void ReadLineDestroy();
 
 #endif

@@ -1,25 +1,30 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-static const char *promt = " $ ";
+static const char *promt = " \e[0;32m$\e[0m ";
 
-static int history_size = 500;
+// history
+static const char *history_file = "/home/white/.config/sh/history";
+static const int history_size = 1000;
 
-static char *env[] = {
-	"", /* saved for path */
-/* #include "env.agl" */
-	NULL,
-};
-
-static const char *g_path[] = {
-	"/bin/",
-	"/usr/local/bin/",
+static const char *path[] = {
+	"/bin",
+	"/usr/bin",
+	"/usr/local/bin",
+	"/usr/sbin",
+	"/home/white/.local/bin",
+	"/home/white/archive/scripts",
+	"/home/white/projects/chess",
 };
 
 static char *aliases[][2] = {
-	{"vim", "nvim"},
-	{"m", "make"},
-	{"e", "./exe"},
+	{ "p", "printenv PATH" },
+	{ "vim", "nvim" },
+	{ "m", "./build.sh" },
+	{ "e", "./exe" },
+	{ "ls", "ls --color --group-directories-first" },
+	{ "ll", "ls -la --color" },
+	{ "l", "ls -la --color" },
 };
 
 #endif

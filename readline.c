@@ -1,87 +1,82 @@
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "readline.h"
+#include "data_structers/string_builder.h"
+#include "data_structers/trie.h"
+#include "line.h"
+#include "mycursors.h"
 
-// Implementation
-static char *buffer;
-static int buffer_index;
-static int buffer_size;
-static const char *(*syntax_highlighting_func)(const char *line);
-static int cursor_dx;
+static Trie *g_syntax_trie = NULL;
+static void (*keysmap[150])(Line *line, u16 key) = {0};
+u16 getch();
+void binding(Line *line, u16 key);
+void bindingReturn(Line *line, u16 key);
+void bindingSpace(Line *line, u16 key);
+void bindingArrowUp(Line *line, u16 key);
+void bindingArrowDown(Line *line, u16 key);
+void bindingArrowRight(Line *line, u16 key);
+void bindingArrowLeft(Line *line, u16 key);
+void bindingControlL(Line *line, u16 key);
+void bindingTab(Line *line, u16 key);
 
-void action_tab(int val);
-void action_control_l(int val);
-void action_arrow_left(int val);
-void action_arrow_right(int val);
-void action_arrow_up(int val);
-void action_space(int val);
-void action_return(int val);
-void action_regular_key(int val);
-void action_arrow_down(int val);
-
-#define KEYS_MAP_SIZE 150
-
-static void (*keys_functions_map[KEYS_MAP_SIZE])(int key) = {
-	[0 ... KEYS_MAP_SIZE - 1] = NULL,
-	[KEY_RETURN] = action_return,
-	[KEY_SPACE] = action_space,
-	[KEY_ARROW_UP] = action_arrow_up,
-	[KEY_ARROW_DOWN] = action_arrow_down,
-	[KEY_ARROW_RIGHT] = action_arrow_right,
-	[KEY_ARROW_LEFT] = action_arrow_left,
-	[KEY_CONTROL_L] = action_control_l,
-	[KEY_TAB] = action_tab,
-	['!' ... '~'] = action_regular_key,
-};
-
-
-int getch();
-
-/* func can be NULL */
-void ReadLineInit(const char *(*syntax_func)(const char *line))
+void ReadLineInit()
 {
-	cursor_dx = 0;
-	buffer_size = 256;
-	buffer_index = 0;
-	buffer = MALLOC(char, buffer_size);
-	*buffer = 0;
-	syntax_highlighting_func = syntax_func;
+	for (u8 i = '!'; i < '~'; i++)
+		keysmap[i] = binding;
+	keysmap[KEY_RETURN]    		= bindingReturn;
+	keysmap[KEY_SPACE]     		= bindingSpace;
+	keysmap[KEY_ARROW_UP]  		= bindingArrowUp;
+	keysmap[KEY_ARROW_DOWN]		= bindingArrowDown;
+	keysmap[KEY_ARROW_RIGHT] 	= bindingArrowRight;
+	keysmap[KEY_ARROW_LEFT] 	= bindingArrowLeft;
+	keysmap[KEY_CONTROL_L] 		= bindingControlL;
+	keysmap[KEY_TAB] 		= bindingTab;
 }
 
-char *ReadLine(const char *promt)
+void printLine(Line *line, const char *promt, Dict *highlight_dict)
 {
-	int promt_len = strlen(promt);
-	printf("%s%s", promt, buffer);
+	CLEAR_LINE();
+	CURSOR_COL(0);
+	printf("%s", promt);
+	if (highlight_dict)
+		LineHighlight(line, highlight_dict);
+	LinePrint(line);
+	LineClearHighlight(line);
 	fflush(stdout);
+}
+void ReadLineSetSyntaxTrie(Trie *syntax_trie)
+{
+	g_syntax_trie = syntax_trie;
+}
 
-	int key = getch();
-	while (key != '\n') {
-		if (keys_functions_map[key])
-			keys_functions_map[key](key);
-		CLEAR_LINE();
-		CURSOR_LEFT(buffer_index + promt_len);
-		printf("%s%s", promt, buffer);
-		fflush(stdout);
-		if (buffer_index + 10 > buffer_size) {
-			buffer_size += 50;
-			buffer = REALLOC(buffer, char, buffer_size);
-		}
-		key = getch();
+char *ReadLine(const char *promt, Dict *highlight_dict)
+{
+	u16 key;
+	Line line;
+	LineInit(&line);
+
+	printLine(&line, promt, highlight_dict);
+	while ((key = getch()) != '\n') {
+		// if its a binding call the binding
+		if (keysmap[key])
+			keysmap[key](&line, key);
+		printLine(&line, promt, highlight_dict);
 	}
+
 	putchar('\n');
-	char *tmp = strdup(buffer);
-	buffer_index = 0;
-	*buffer = 0;
-	return tmp;
+
+	char *str = LineToStr(&line);
+	LineFree(&line);
+	return str;
 }
 
-void ReadLineDestroy()
+u16 getch()
 {
-	free(buffer);
-}
-
-
-int getch()
-{
-        int buf = 0;
+        u16 buf = 0;
         struct termios old = {0};
         tcgetattr(0, &old);
         old.c_lflag &= ~ICANON;
@@ -94,61 +89,59 @@ int getch()
         old.c_lflag |= ECHO;
         tcsetattr(0, TCSADRAIN, &old);
 
+	// if its an arrow
 	if (buf == 27) {
         	read(0, &buf, 1);
         	read(0, &buf, 1);
 		buf += 63;
 	}
 
-        return (buf);
+        return buf;
 }
 
-void action_regular_key(int val)
+void binding(Line *line, u16 key)
 {
-	buffer[buffer_index++] = val;
-	buffer[buffer_index] = 0;
+	LineAppend(line, key, RESET);
 }
 
-void action_return(int val)
+void bindingReturn(Line *line, u16 key)
 {
-	if (buffer_index > 0) {
-		buffer[--buffer_index] = 0;
-		CURSOR_LEFT(1);
-	}
+	LineDelete(line);
 }
 
-void action_space(int val)
+void bindingSpace(Line *line, u16 key)
 {
-	buffer[buffer_index++] = ' ';
-	buffer[buffer_index] = 0;
+	LineAppend(line, ' ', RESET);
 }
 
-void action_arrow_up(int val)
+void bindingArrowUp(Line *line, u16 key)
 {
 
 }
 
-void action_arrow_down(int val)
+void bindingArrowDown(Line *line, u16 key)
 {
-
+	LineSetString(line, "itay mehadab", YELLOW);
 }
 
-void action_arrow_right(int val)
+void bindingArrowRight(Line *line, u16 key)
 {
-	
-}
-void action_arrow_left(int val)
-{
-	cursor_dx++;
+	LineCursorRight(line, 1);
 }
 
-void action_control_l(int val)
+void bindingArrowLeft(Line *line, u16 key)
 {
-	fputs("\e[1;1H\e[2J", stdout);
+	LineCursorLeft(line, 1);
+}
+
+void bindingControlL(Line *line, u16 key)
+{
+	CLEAR_SCREEN();
 	fflush(stdout);
 }
 
-void action_tab(int val)
+void bindingTab(Line *line, u16 key)
 {
-
+	if (g_syntax_trie != NULL)
+		LineMatchCursor(line, g_syntax_trie);
 }
