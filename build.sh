@@ -34,7 +34,7 @@ elif [ "$1" = "profile" ]; then
 	fi
 elif [ "$1" = "release" ]; then
 	compile
-	mv exe /home/white/.local/bin/mysh
+	mv $EXENAME /home/white/.local/bin/mysh
 else
 	compile
 	echo "build succsesfuly!"

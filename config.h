@@ -17,6 +17,7 @@ static const char *path[] = {
 };
 
 static char *aliases[][2] = {
+	{ "se", "grep -ri" },
 	{ "p", "printenv PATH" },
 	{ "..", "cd .." },
 	{ "vim", "nvim" },

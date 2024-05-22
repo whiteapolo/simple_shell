@@ -26,7 +26,7 @@
 void initenv()
 {
 	unsetenv("SHELL");
-	setenv("SHELL", "/home/white/.local/bin/mysh", 1);
+	setenv("SHELL", "/usr/bin/zsh", 1);
 	setenv("HOME", getpwuid(geteuid())->pw_dir, 1);
 
 	unsetenv("PATH");

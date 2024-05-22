@@ -10,7 +10,6 @@
 #include "data_structers/trie.h"
 #include "line.h"
 #include "mycursors.h"
-#include "wh/messure_time.h"
 
 static Trie *g_syntax_trie = NULL;
 static HistoryEntry *g_hist_entry = NULL;

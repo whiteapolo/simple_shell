@@ -18,7 +18,7 @@ void TrieInit(Trie *t)
 
 Trie *TrieCreateNode(char letter, void *info)
 {
-	Trie *t = MALLOC(Trie, 1);
+	Trie *t = malloc(sizeof(Trie));
 	lll_init(&t->children);
 	t->letter = letter;
 	t->str = info;

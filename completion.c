@@ -7,7 +7,6 @@
 #include "path.h"
 #include "data_structers/trie.h"
 #include "types.h"
-#include <wh/messure_time.h>
 
 char **complete_program(const char *str, int *matches, Trie *syntax_trie)
 {
