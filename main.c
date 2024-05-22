@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <dirent.h>
-#include <wh/messure_time.h>
 
 #include "completion.h"
 #include "data_structers/dict.h"

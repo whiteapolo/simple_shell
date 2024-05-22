@@ -3,7 +3,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <wh/messure_time.h>
 #include <stdbool.h>
 
 #include "completion.h"
