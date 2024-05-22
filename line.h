@@ -42,6 +42,7 @@ typedef struct {
 
 
 void LineInit(Line *line);
+void clearCompletions();
 void LineAppend(Line *line, char ch, u8 color);
 void LineAppendString(Line *line, const char *str, u8 color);
 void LineDelete(Line *line);
@@ -49,11 +50,11 @@ void LineClear(Line *line);
 void LinePrint(Line *line);
 void LineFree(Line *line);
 char *LineToStr(Line *line);
-void LineHighlight(Line *line, Dict *highlight_dict);
+void LineHighlight(Line *line, Trie *syntax_trie);
 void LineClearHighlight(Line *line);
 void LineCursorRight(Line *line, u8 n);
 void LineCursorLeft(Line *line, u8 n);
-void LineMatchCursor(Line *line, Trie *trie);
+void LineComplete(Line *line, Trie *syntax_trie);
 void LineSetString(Line *line, const char *str, u8 color);
 
 #endif

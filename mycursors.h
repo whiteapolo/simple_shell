@@ -1,6 +1,9 @@
 #ifndef MY_CURSORS_H
 #define MY_CURSORS_H
 
+#include <sys/ioctl.h>
+#include <stdio.h>
+
 /*********************************************************************
  *                      CURSOR MANIPULATION                          *
  ********************************************************************/
@@ -69,6 +72,19 @@
 #define SET_BG_COLOR_CYAN_BRIGHT() 	fputs("\e[46;1m", stdout)
 #define SET_BG_COLOR_WHITE_BRIGHT() 	fputs("\e[47;1m", stdout)
 
+static int TERMINAL_COL()
+{
+	struct winsize w; 
+	ioctl(0, TIOCGWINSZ, &w);
+	return w.ws_col;
+}
+
+static int TERMINAL_ROW()
+{
+	struct winsize w; 
+	ioctl(0, TIOCGWINSZ, &w);
+	return w.ws_row;
+}
 
 /*********************************************************************
  *                           TERMINAL                                *

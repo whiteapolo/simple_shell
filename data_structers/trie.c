@@ -1,9 +1,20 @@
 #include "trie.h"
 #include "lll.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "string_builder.h"
+#include "mystrings.h"
+#include "../types.h"
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+void TrieInit(Trie *t)
+{
+	lll_init(&t->children);
+	t->str = NULL;
+}
 
 Trie *TrieCreateNode(char letter, void *info)
 {
@@ -28,12 +39,22 @@ Trie *TrieGetiChild(Trie *t, char letter)
 bool TrieExists(Trie *t, const char *str)
 {
 	Trie *cnt = t;
-	while (*(str)) {
+	while (*str) {
 		if ((cnt = TrieGetiChild(cnt, *str)) == NULL)
 			return false;
 		str++;
 	}
-	return true;
+	return cnt->str;
+}
+
+Trie *TrieGet(Trie *t, const char *str)
+{
+	while (*str) {
+		if ((t = TrieGetiChild(t, *str)) == NULL)
+			return NULL;
+		str++;
+	}
+	return t;
 }
 
 void *TrieAddiChild(Trie *t, char letter, void *info)
@@ -61,13 +82,14 @@ void TrieAdd(Trie *t, const char *str)
 	cnt->str = strdup(str_start);
 }
 
-void TrieCollectInfos(Trie *t, StringBuilder *sb)
+void TrieCollectInfos(Trie *t, Sbuilder *sb)
 {
 	if (t == NULL)
 		return;
 
-	if (t->str != NULL)
-		StringBuilderAppend(sb, t->str);
+	if (t->str != NULL) {
+		SbuilderAppend(sb, t->str);
+	}
 
 	lll_t *cnt = t->children;
 	while (cnt != NULL) {
@@ -76,21 +98,30 @@ void TrieCollectInfos(Trie *t, StringBuilder *sb)
 	}
 }
 
+
 char **TrieGetAllMatches(Trie *t, const char *str, int *size)
 {
-	*size = 0;
-	Trie *cnt = t;
-	while (*(str)) {
-		if ((cnt = TrieGetiChild(cnt, *str)) == NULL)
-			return NULL;
-		str++;
+	int i = 0;
+	if (size != NULL) *size = 0;
+
+	t = TrieGet(t, str);
+	if (t == NULL) {
+		return EMPTY_SPLIT();
 	}
 
-	StringBuilder *sb = StringBuilderCreate();
-	TrieCollectInfos(cnt, sb);
-	*size = sb->size;
+	Sbuilder *sb = SbuilderCreate();
+	SbuilderAppend(sb, "");
+	TrieCollectInfos(t, sb);
+	int len = sb->size;
+	if (size != NULL) *size = len;
 
-	return StringBuilderToStrings(sb, true);
+	char **completions = SbuilderToStrings(sb, true);
+	free(*completions);
+	char *prefix = common_prefix(completions + 1, len - 1);
+	*completions = strdup(prefix + strlen(str));
+	free(prefix);
+
+	return completions;
 }
 
 void _TrieDestroy(void *t)

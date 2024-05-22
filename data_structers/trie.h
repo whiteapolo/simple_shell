@@ -13,6 +13,7 @@ typedef struct Trie {
 	char letter;
 } Trie;
 
+void TrieInit(Trie *t);
 char **TrieGetAllMatches(Trie *t, const char *str, int *size);
 Trie *TrieCreateNode(char letter, void *info);
 Trie *TrieGetiChild(Trie *t, char letter);

@@ -14,11 +14,11 @@ static const char *path[] = {
 	"/usr/sbin",
 	"/home/white/.local/bin",
 	"/home/white/archive/scripts",
-	"/home/white/projects/chess",
 };
 
 static char *aliases[][2] = {
 	{ "p", "printenv PATH" },
+	{ "..", "cd .." },
 	{ "vim", "nvim" },
 	{ "m", "./build.sh" },
 	{ "e", "./exe" },

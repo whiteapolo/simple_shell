@@ -1,5 +1,5 @@
 #include "cmd.h"
-#include "data_structers/string_builder.h"
+#include "data_structers/mystrings.h"
 #include "data_structers/dict.h"
 #include <stdbool.h>
 #include <stdlib.h>
@@ -14,13 +14,13 @@ void proccessAlias(Cmd **cmd, Dict *alias_dict);
 
 Cmd *CmdCreateFromString(const char *str)
 {
-	return StringBuilderCreateFromString(str, " ");
+	return SbuilderCreateFromString(str, " ");
 }
 
 int CmdRun(Cmd *cmd, Dict *programs_dict, Dict *alias_dict, bool destroy)
 {
 	proccessAlias(&cmd, alias_dict);
-	char **argv = StringBuilderToStrings(cmd, destroy);
+	char **argv = SbuilderToStrings(cmd, destroy);
 	int exit_status = 0;
 	u8 (*fun)(char**) = NULL;
 
@@ -44,32 +44,32 @@ int CmdRun(Cmd *cmd, Dict *programs_dict, Dict *alias_dict, bool destroy)
 
 Cmd *CmdCreate()
 {
-	return StringBuilderCreate();
+	return SbuilderCreate();
 }
 
 void CmdCat(Cmd *dest, Cmd *src)
 {
-	StringBuilderConcat(dest, src);
+	SbuilderConcat(dest, src);
 }
 
 void CmdAppend(Cmd *cmd, const char *arg)
 {
-	StringBuilderAppend(cmd, arg);
+	SbuilderAppend(cmd, arg);
 }
 
 void CmdDestroy(Cmd *cmd)
 {
-	StringBuilderDestroy(cmd);
+	SbuilderDestroy(cmd);
 }
 
 const char *CmdGet(Cmd *cmd, u16 n)
 {
-	return StringBuilderGet(cmd, n);
+	return SbuilderGet(cmd, n);
 }
 
 void CmdRemove(Cmd *cmd, u16 n)
 {
-	StringBuilderRemoveIndex(cmd, n);
+	SbuilderRemoveIndex(cmd, n);
 }
 
 void proccessAlias(Cmd **cmd, Dict *alias_dict)

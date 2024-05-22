@@ -1,13 +1,14 @@
 #ifndef CMD_H
 #define CMD_H
 
-#include "data_structers/string_builder.h"
+#include "data_structers/mystrings.h"
 #include "data_structers/dict.h"
 #include "types.h"
 
 #define FILE_EXISTS(p) (!access(p, F_OK))
+#define IS_EMPTY_COMMAND(str) (IS_EMPTY_STRING(str) || strpbrk(str, " \t\n\v\f\r") == str)
 
-typedef StringBuilder Cmd;
+typedef Sbuilder Cmd;
 
 Cmd *CmdCreate();
 void CmdAppend(Cmd *cmd, const char *arg);

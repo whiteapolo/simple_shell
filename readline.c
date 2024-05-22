@@ -4,14 +4,18 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "history.h"
 #include "readline.h"
-#include "data_structers/string_builder.h"
+#include "data_structers/mystrings.h"
 #include "data_structers/trie.h"
 #include "line.h"
 #include "mycursors.h"
+#include "wh/messure_time.h"
 
 static Trie *g_syntax_trie = NULL;
-static void (*keysmap[150])(Line *line, u16 key) = {0};
+static HistoryEntry *g_hist_entry = NULL;
+static void (*g_keys_map[150])(Line *line, u16 key) = {0};
+
 u16 getch();
 void binding(Line *line, u16 key);
 void bindingReturn(Line *line, u16 key);
@@ -23,52 +27,52 @@ void bindingArrowLeft(Line *line, u16 key);
 void bindingControlL(Line *line, u16 key);
 void bindingTab(Line *line, u16 key);
 
-void ReadLineInit()
+void ReadLineInit(HistoryEntry *hist_entry, Trie *syntax_trie)
 {
+	CURSOR_TO_BLOCK();
 	for (u8 i = '!'; i < '~'; i++)
-		keysmap[i] = binding;
-	keysmap[KEY_RETURN]    		= bindingReturn;
-	keysmap[KEY_SPACE]     		= bindingSpace;
-	keysmap[KEY_ARROW_UP]  		= bindingArrowUp;
-	keysmap[KEY_ARROW_DOWN]		= bindingArrowDown;
-	keysmap[KEY_ARROW_RIGHT] 	= bindingArrowRight;
-	keysmap[KEY_ARROW_LEFT] 	= bindingArrowLeft;
-	keysmap[KEY_CONTROL_L] 		= bindingControlL;
-	keysmap[KEY_TAB] 		= bindingTab;
+		g_keys_map[i] = binding;
+	g_keys_map[KEY_RETURN]    		= bindingReturn;
+	g_keys_map[KEY_SPACE]     		= bindingSpace;
+	g_keys_map[KEY_ARROW_UP]  		= bindingArrowUp;
+	g_keys_map[KEY_ARROW_DOWN]		= bindingArrowDown;
+	g_keys_map[KEY_ARROW_RIGHT] 	= bindingArrowRight;
+	g_keys_map[KEY_ARROW_LEFT] 	= bindingArrowLeft;
+	g_keys_map[KEY_CONTROL_L] 		= bindingControlL;
+	g_keys_map[KEY_TAB] 		= bindingTab;
+	g_syntax_trie = syntax_trie;
+	g_hist_entry = hist_entry;
 }
 
-void printLine(Line *line, const char *promt, Dict *highlight_dict)
+void printLine(Line *line, const char *prompt)
 {
 	CLEAR_LINE();
 	CURSOR_COL(0);
-	printf("%s", promt);
-	if (highlight_dict)
-		LineHighlight(line, highlight_dict);
+	printf("%s", prompt);
+	if (g_syntax_trie)
+		LineHighlight(line, g_syntax_trie);
 	LinePrint(line);
 	LineClearHighlight(line);
 	fflush(stdout);
 }
-void ReadLineSetSyntaxTrie(Trie *syntax_trie)
-{
-	g_syntax_trie = syntax_trie;
-}
 
-char *ReadLine(const char *promt, Dict *highlight_dict)
+char *ReadLine(const char *prompt)
 {
 	u16 key;
 	Line line;
 	LineInit(&line);
 
-	printLine(&line, promt, highlight_dict);
+	printLine(&line, prompt);
 	while ((key = getch()) != '\n') {
 		// if its a binding call the binding
-		if (keysmap[key])
-			keysmap[key](&line, key);
-		printLine(&line, promt, highlight_dict);
+		if (g_keys_map[key])
+			g_keys_map[key](&line, key);
+		printLine(&line, prompt);
 	}
 
 	putchar('\n');
 
+	clearCompletions();
 	char *str = LineToStr(&line);
 	LineFree(&line);
 	return str;
@@ -116,12 +120,16 @@ void bindingSpace(Line *line, u16 key)
 
 void bindingArrowUp(Line *line, u16 key)
 {
-
+	const char *command = HistoryBackwars(g_hist_entry);
+	if (command != NULL)
+		LineSetString(line, command, 0);
 }
 
 void bindingArrowDown(Line *line, u16 key)
 {
-	LineSetString(line, "itay mehadab", YELLOW);
+	const char *command = HistoryFoward(g_hist_entry);
+	if (command != NULL)
+		LineSetString(line, command, 0);
 }
 
 void bindingArrowRight(Line *line, u16 key)
@@ -143,5 +151,5 @@ void bindingControlL(Line *line, u16 key)
 void bindingTab(Line *line, u16 key)
 {
 	if (g_syntax_trie != NULL)
-		LineMatchCursor(line, g_syntax_trie);
+		LineComplete(line, g_syntax_trie);
 }

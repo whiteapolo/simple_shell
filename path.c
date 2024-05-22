@@ -1,3 +1,4 @@
+#include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <pwd.h>
@@ -6,8 +7,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "data_structers/trie.h"
 #include "path.h"
-#include "data_structers/string_builder.h"
+#include "data_structers/mystrings.h"
 #include "types.h"
 
 void updatepwd()
@@ -48,7 +50,9 @@ int cd(char **argv)
 	else
 		strcpy(p, argv[1]);
 
-	if (isFileExists(p)) {
+	struct stat path_stat;
+    	stat(p, &path_stat);
+	if (S_ISDIR(path_stat.st_mode)) {
 		chdir(p);
 	} else {
 		printf("cd: no such file or directory: %s\n", p);
@@ -72,6 +76,17 @@ void forEachPath(void (*action)(const char *p))
 	}
 
 	free(pdup);
+}
+
+char *get_prettify_cwd()
+{
+	char *cwd = getcwd(NULL, 256);
+
+	if (cwd == NULL)
+		return NULL;
+
+	prettify_path(&cwd);
+	return cwd;
 }
 
 // replace /home/USER with ~
@@ -126,4 +141,18 @@ bool isFileExistsPath(const char *file)
 	}
 	free(path_dup);
 	return exists;
+}
+
+bool is_dir(const char *path)
+{
+	struct stat path_stat;
+    	stat(path, &path_stat);
+	return S_ISDIR(path_stat.st_mode);
+}
+
+bool is_file(const char *path)
+{
+	struct stat path_stat;
+    	stat(path, &path_stat);
+	return S_ISREG(path_stat.st_mode);
 }

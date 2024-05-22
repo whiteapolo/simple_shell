@@ -7,9 +7,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <dirent.h>
+#include <wh/messure_time.h>
 
+#include "completion.h"
 #include "data_structers/dict.h"
-#include "data_structers/string_builder.h"
+#include "data_structers/mystrings.h"
 #include "data_structers/lll.h"
 #include "cmd.h"
 #include "config.h"
@@ -21,8 +24,10 @@
 #include "history.h"
 #include "path.h"
 
-void envinit()
+void initenv()
 {
+	unsetenv("SHELL");
+	setenv("SHELL", "/home/white/.local/bin/mysh", 1);
 	setenv("HOME", getpwuid(geteuid())->pw_dir, 1);
 
 	unsetenv("PATH");
@@ -34,28 +39,26 @@ void envinit()
 
 char *getpromt()
 {
-	char *cwd = getcwd(NULL, 256);
-	const char *home = getenv("HOME");
+	char *cwd = get_prettify_cwd();
 
 	if (cwd == NULL)
 		return strdup(promt);
 
-	prettify_path(&cwd);
 	char *result = str4dup("\e[0;35m", cwd, "\e[0m", promt);
-
 	free(cwd);
+
 	return result;
 }
 
-char *inputcommand(Dict *highlight_dict)
+char *inputcommand()
 {
 	char *promt = getpromt();
-	char *command = ReadLine(promt, highlight_dict);
+	char *command = ReadLine(promt);
 	free(promt);
 	return command;
 }
 
-void alias_init(Dict *alias_dict)
+void init_alias_dict(Dict *alias_dict)
 {
 	dict_init(alias_dict, ARRAY_SIZE(aliases));
 	FOR(i, ARRAY_SIZE(aliases)) {
@@ -63,74 +66,53 @@ void alias_init(Dict *alias_dict)
 	}
 }
 
-void programs_init(Dict *programs_dict)
+void init_programs_dict(Dict *programs_dict)
 {
 	dict_init(programs_dict, 2);
 	dict_insert(programs_dict, "cd", cd);
 	dict_insert(programs_dict, "exit", exit);
 }
 
-void highlight_init(Dict *highlight_dict)
-{
-	dict_init(highlight_dict, 2 + ARRAY_SIZE(aliases));
-	FOR(i, ARRAY_SIZE(aliases)) {
-		dict_insert(highlight_dict, aliases[i][0], (void*)1);
-	}
-	dict_insert(highlight_dict, "cd", (void*)1);
-	dict_insert(highlight_dict, "exit", (void*)1);
-}
-
-void at_exit()
-{
-	/* putchar('\n'); */
-	HistorySave();
-	fflush(stdout);
-	exit(0);
-}
-
-void print(const char *p)
-{
-	printf("%s\n", p);
-}
-
 void init_syntax_trie(Trie *t)
 {
-	TrieAdd(t, "echo");
+	TrieInit(t);
 	TrieAdd(t, "exit");
-	TrieAdd(t, "cneofetch");
+	TrieAdd(t, "cd");
 
-	/* forEachPath(print); */
+	FOR(i, ARRAY_SIZE(aliases)) {
+		TrieAdd(t, aliases[i][0]);
+	}
 
+	FOR_EACH_PATH(path,
+		FOR_EACH_FILE_IN_DIR(path, file, 
+			TrieAdd(t, file);
+		);
+	);
 }
 
 int main(void)
 {
+	HistoryEntry hist_entry;
 	char *command;
 	Dict alias_dict;
 	Dict programs_dict;
-	Dict highlight_dict;
 	Trie syntax_trie;
 	Cmd *cmd;
 
-	envinit();
-	HistoryInit();
-	signal(SIGTERM, at_exit);
-	signal(SIGINT, at_exit);
-	signal(SIGKILL, at_exit);
-	atexit(at_exit);
-	alias_init(&alias_dict);
-	programs_init(&programs_dict);
-	highlight_init(&highlight_dict);
-	CURSOR_TO_BLOCK();
-	ReadLineInit(NULL);
+	initenv();
+	HistoryInit(&hist_entry, history_file);
+	init_alias_dict(&alias_dict);
+	init_programs_dict(&programs_dict);
 	init_syntax_trie(&syntax_trie);
-	ReadLineSetSyntaxTrie(&syntax_trie);
+
+	ReadLineInit(&hist_entry, &syntax_trie);
 
 	while (1) {
-		command = inputcommand(&highlight_dict);
-		if (!IS_EMPTY_STRING(command)) {
+		command = inputcommand(&syntax_trie);
+		if (!IS_EMPTY_COMMAND(command)) {
 			cmd = CmdCreateFromString(command);
-			HistoryAppend(command);
+			HistoryAppend(&hist_entry, command);
+			HistorySave(&hist_entry);
 			CmdRun(cmd, &programs_dict, &alias_dict, true);
 		}
 		free(command);

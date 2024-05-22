@@ -1,13 +1,14 @@
 #!/bin/sh
 set -e
 CC=gcc
-CFILES="path.c history.c line.c cmd.c main.c readline.c data_structers/*.c"
-CFLAGS="-O0 -g"
-EXENAME="exe"
+# CFILES="path.c history.c line.c cmd.c main.c readline.c data_structers/*.c"
+CFILES="*.c data_structers/*.c"
+CFLAGS="-O3"
+EXENAME="mysh"
 
 compile()
 {
-	$CC $CFLAGS $1 $CFILES -o exe
+	$CC $CFLAGS $1 $CFILES -o $EXENAME
 }
 
 profile()
@@ -31,6 +32,9 @@ elif [ "$1" = "profile" ]; then
 	else
 		echo "file name required!"
 	fi
+elif [ "$1" = "release" ]; then
+	compile
+	mv exe /home/white/.local/bin/mysh
 else
 	compile
 	echo "build succsesfuly!"
