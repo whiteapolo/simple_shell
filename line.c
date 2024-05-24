@@ -183,40 +183,11 @@ void LineClearHighlight(Line *line)
 	LineSetColor(line, 0);
 }
 
-void showCompletions(char **completions, int size)
-{
-	const int maxSize = MIN(MIN(7, size), TERMINAL_COL());
-	int i = 0;
-	while (i < maxSize) {
-		putchar('\n');
-		i++;
-	}
-	CURSOR_UP(i);
-	SAVE_CURSOR();
-	FOR(i, maxSize) {
-		printf("\n%s", completions[i]);
-	}
-	RESTORE_CURSOR();
-}
-
-void clearCompletions()
-{
-	SAVE_CURSOR();
-	const int rows = TERMINAL_ROW();
-	FOR(i, rows) {
-		CURSOR_DOWN(1);
-		CLEAR_LINE();
-	}
-	RESTORE_CURSOR();
-}
-
 void LineComplete(Line *line, Trie *syntax_trie)
 {
 	dlist_t *cursor = line->cursor;
 
 	if (cursor->pre == NULL) return;
-	/* if (GLYPN(cursor->info)->ch == ' ') return; */
-	/* if (cursor->pre->info != NULL && GLYPN(cursor->pre->info)->ch == ' ') return; */
 
 	int matches;
 	char **completions = complete_line(LineToStr(line), &matches, syntax_trie);
@@ -224,8 +195,8 @@ void LineComplete(Line *line, Trie *syntax_trie)
 		LineAppendString(line, *completions, 0);
 	}
 	if (matches > 2) {
-		clearCompletions();
-		showCompletions(completions + 1, matches - 1);
+		clear_completions();
+		show_completions(completions + 1, matches - 1);
 	}
 
 	splitfree(completions);

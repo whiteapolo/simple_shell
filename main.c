@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 #include <dirent.h>
+#include <locale.h>
 
 #include "completion.h"
 #include "data_structers/dict.h"
@@ -25,8 +26,10 @@
 
 void initenv()
 {
-	unsetenv("SHELL");
-	setenv("SHELL", "/usr/bin/zsh", 1);
+	FOR(i, ARRAY_SIZE(env)) {
+		putenv(env[i]);
+	}
+
 	setenv("HOME", getpwuid(geteuid())->pw_dir, 1);
 
 	unsetenv("PATH");
@@ -83,7 +86,7 @@ void init_syntax_trie(Trie *t)
 	}
 
 	FOR_EACH_PATH(path,
-		FOR_EACH_FILE_IN_DIR(path, file, 
+		FOR_EACH_FILE_IN_DIR(path, file, false,
 			TrieAdd(t, file);
 		);
 	);
@@ -97,6 +100,7 @@ int main(void)
 	Dict programs_dict;
 	Trie syntax_trie;
 	Cmd *cmd;
+	setlocale(LC_CTYPE, "en_US.UTF-8");
 
 	initenv();
 	HistoryInit(&hist_entry, history_file);

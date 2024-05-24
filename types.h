@@ -27,6 +27,8 @@ typedef int64_t i64;
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
+#define IGNORE(a) do { if(a); } while (0)
+
 #ifndef PRINT_VAR
   #define PRINT_VAR(x) _Generic((x), \
 	int: printf("%s = %d\n", #x, x),\

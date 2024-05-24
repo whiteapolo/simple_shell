@@ -20,15 +20,17 @@ do { 						\
 	free(pdup); 				\
 } while (0)
 
-#define FOR_EACH_FILE_IN_DIR(dir, varname, code) 	\
+#define FOR_EACH_FILE_IN_DIR(dir, varname, show_hidden, code) 	\
 do { 							\
 	struct dirent *_de; 				\
 	DIR *_dr = opendir(dir); 			\
 	if (_dr == NULL) 				\
 		break; 					\
 	while ((_de = readdir(_dr)) != NULL) { 		\
-		const char *varname = _de->d_name; 	\
-		do { code } while (0); 			\
+		if (_de->d_name[0] != '.' || show_hidden) { 	\
+			const char *varname = _de->d_name; 	\
+			do { code } while (0); 		\
+		} 					\
 	} 						\
 	closedir(_dr);  				\
 } while (0)

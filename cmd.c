@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include "types.h"
 #include "config.h"
+#include <stdio.h>
 
 // local programs
 u8 cd(char **argv);

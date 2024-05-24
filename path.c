@@ -37,28 +37,31 @@ void appendpath(const char *dir)
 
 int cd(char **argv)
 {
-	char p[256];
+	char *p;
 	const char *home_path = getenv("HOME");
 
 	if (home_path == NULL)
 		home_path = ".";
 
-	if (argv[1] == NULL)
-		strcpy(p, home_path);
-	else if (!strncmp(*argv, "~/", 2))
-		sprintf(p, "%s%s", home_path, argv[1]+2);
-	else
-		strcpy(p, argv[1]);
+	if (argv[1] == NULL) {
+		p = strdup(home_path);
+	} else {
+		p = strdup(argv[1]);
+		unprettify_path(&p);
+	}
 
 	struct stat path_stat;
     	stat(p, &path_stat);
 	if (S_ISDIR(path_stat.st_mode)) {
-		chdir(p);
+		if(chdir(p)) {
+			printf("cd: error chdir into %s\n", p);
+		}
 	} else {
 		printf("cd: no such file or directory: %s\n", p);
 		return 1;
 	}
 	updatepwd();
+	free(p);
 	return 0;
 }
 

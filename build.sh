@@ -4,7 +4,8 @@ CC=gcc
 # CFILES="path.c history.c line.c cmd.c main.c readline.c data_structers/*.c"
 CFILES="*.c data_structers/*.c"
 CFLAGS="-O3"
-EXENAME="mysh"
+# EXENAME="mysh"
+EXENAME="exe"
 
 compile()
 {

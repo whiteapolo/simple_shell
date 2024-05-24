@@ -29,6 +29,28 @@
 #define BRIGHT_WHITE 	97   /*  BRIGHT WHITE   */
 #define BRIGHT_GRAY 	90   /*  BRIGHT GRAY    */
 
+#define RESET_COLOR 		"\e[0;0m"     /*  RESET   */
+
+#define RED_COLOR 		"\e[0;31m"   /*  RED     */
+#define GREEN_COLOR 		"\e[0;32m"   /*  GREEN   */
+#define YELLOW_COLOR 		"\e[0;33m"   /*  YELLOW  */
+#define BLUE_COLOR 		"\e[0;34m"   /*  BLUE    */
+#define MAGENTA_COLOR 	 	"\e[0;35m"   /*  MAGENTA */
+#define CYAN_COLOR 		"\e[0;36m"   /*  CYAN    */
+#define WHITE_COLOR 		"\e[0;37m"   /*  WHITE   */
+#define GRAY_COLOR 		"\e[0;90m"   /*  GRAY    */
+
+#define BRIGHT_RED_COLOR 	"\e[0;91m"   /*  BRIGHT RED     */
+#define BRIGHT_GREEN_COLOR 	"\e[0;92m"   /*  BRIGHT GREEN   */
+#define BRIGHT_YELLOW_COLOR 	"\e[0;93m"   /*  BRIGHT YELLOW  */
+#define BRIGHT_BLUE_COLOR 	"\e[0;94m"   /*  BRIGHT BLUE    */
+#define BRIGHT_MAGENTA_COLOR 	"\e[0;95m"   /*  BRIGHT MAGENTA */
+#define BRIGHT_CYAN_COLOR 	"\e[0;96m"   /*  BRIGHT CYAN    */
+#define BRIGHT_WHITE_COLOR 	"\e[0;97m"   /*  BRIGHT WHITE   */
+#define BRIGHT_GRAY_COLOR 	"\e[0;90m"   /*  BRIGHT GRAY    */
+
+
+
 typedef struct {
 	char ch;
 	bool bold;
