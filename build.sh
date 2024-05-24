@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-CC=gcc
+CC=cc
 # CFILES="path.c history.c line.c cmd.c main.c readline.c data_structers/*.c"
 CFILES="*.c data_structers/*.c"
 CFLAGS="-O3 -g"

@@ -163,15 +163,18 @@ void LineHighlight(Line *line, Trie *syntax_trie)
 	int word_count = 0;
 
 	while (word != NULL) {
+		char *unpretty_word = strdup(word);
+		unprettify_path(&unpretty_word);
 		if (word[0] == '-')
 			HighlightWord(before, CYAN, false);
-		else if (isFileExists(word))
+		else if (isFileExists(unpretty_word))
 			HighlightWord(before, MAGENTA, false);
-		else if (TrieExists(syntax_trie, word) && word_count == 0)
+		else if (TrieExists(syntax_trie, unpretty_word) && word_count == 0)
 			HighlightWord(before, GREEN, false);
 		else if (word_count == 0)
 			HighlightWord(before, RED, true);
 		free(word);
+		free(unpretty_word);
 		before = cnt;
 		word = wordTokFoward(&cnt);
 		word_count++;

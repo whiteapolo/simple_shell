@@ -272,6 +272,37 @@ char **strsplit(const char *str, const char *delim)
 	return split;
 }
 
+void strdevide(const char *str, int index, char **s1, char **s2)
+{
+	*s1 = strndup(str, index + 1);
+	*s2 = strdup(str + index + 1);
+}
+
+void strpush(char **str, char c)
+{
+	int len = strlen(*str);
+	*str = realloc(*str, sizeof(char) * (len + 2));
+	(*str)[len] = c;
+	(*str)[len + 1] = '\0';
+}
+
+void strpush_string(char **str, const char *s)
+{
+	int l1 = strlen(*str);
+	int l2 = strlen(s);
+	*str = realloc(*str, sizeof(char) * (l1 + l2 + 1));
+	strcpy(*str + l1, s);
+}
+
+char strpop(char **str)
+{
+	int len = strlen(*str);
+	*str = realloc(*str, sizeof(char) * len);
+	char c = (*str)[len - 1];
+	(*str)[len - 1] = '\0';
+	return c;
+}
+
 char *strconcat(const char *strings[], int len)
 {
 	int l = 1;

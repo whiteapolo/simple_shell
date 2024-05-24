@@ -27,7 +27,7 @@ do { 							\
 	if (_dr == NULL) 				\
 		break; 					\
 	while ((_de = readdir(_dr)) != NULL) { 		\
-		if (_de->d_name[0] != '.' || show_hidden) { 	\
+		if (_de->d_name[0] != '.' || (show_hidden)) { 	\
 			const char *varname = _de->d_name; 	\
 			do { code } while (0); 		\
 		} 					\

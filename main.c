@@ -100,8 +100,8 @@ int main(void)
 	Dict programs_dict;
 	Trie syntax_trie;
 	Cmd *cmd;
-	setlocale(LC_CTYPE, "en_US.UTF-8");
 
+	setlocale(LC_CTYPE, "en_US.UTF-8");
 	initenv();
 	HistoryInit(&hist_entry, history_file);
 	init_alias_dict(&alias_dict);
@@ -111,7 +111,7 @@ int main(void)
 	ReadLineInit(&hist_entry, &syntax_trie);
 
 	while (1) {
-		command = inputcommand(&syntax_trie);
+		command = inputcommand();
 		if (!IS_EMPTY_COMMAND(command)) {
 			cmd = CmdCreateFromString(command);
 			HistoryAppend(&hist_entry, command);

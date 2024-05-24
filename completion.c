@@ -63,36 +63,37 @@ char **complete_program(const char *str, int *matches, Trie *syntax_trie)
 
 char **complete_path(const char *str, int *matches)
 {
+	char *unpritty_str = strdup(str);
+	unprettify_path(&unpritty_str);
 	int len = strlen(str);
-	bool show_hidden = (*str == '.');
-	char *dir;
+	const char *devidor = strrchr(unpritty_str, '/');
+	char *parent_dir;
+	char *file_name;
 
-	if (strchr(str, '/')) {
-		while (len > 1 && str[len] != '/') {
-			len--;
-		}
-		len++;
-		dir = strndup(str, len);
-		if (str[len] == '.') {
-			show_hidden = true;
-		}
+	if (devidor) {
+		strdevide(unpritty_str, devidor - unpritty_str, &parent_dir, &file_name);
 	} else {
-		dir = strdup(".");
-		len = 0;
+		parent_dir= strdup("./");
+		file_name = strdup(unpritty_str);
 	}
+
 	Trie trie;
 	TrieInit(&trie);
-	FOR_EACH_FILE_IN_DIR(dir, path, show_hidden,
-		char *str;
-		if (is_dir(path))
-			str = str2dup(path, "/");
-		else
-			str = strdup(path);
+	FOR_EACH_FILE_IN_DIR(parent_dir, path, *file_name == '.',
+		char *str = strdup(path);
+		char *allpath = str2dup(parent_dir, str);
+		if (is_dir(allpath))
+			strpush(&str, '/');
 		TrieAdd(&trie, str);
 		free(str);
+		free(allpath);
 	);
-	char **completions = TrieGetAllMatches(&trie, str + len, matches);
+
+	char **completions = TrieGetAllMatches(&trie, file_name, matches);
 	TrieDestroy(&trie);
+	free(file_name);
+	free(parent_dir);
+	free(unpritty_str);
 	return completions;
 }
 

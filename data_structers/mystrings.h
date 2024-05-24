@@ -46,6 +46,10 @@ char **strsplit(const char *str, const char *delim);
 char *str3dup(const char *str1, const char *str2, const char *str3);
 char *str2dup(const char *str1, const char *str2);
 char *str4dup(const char *str1, const char *str2, const char *str3, const char *str4);
+void strdevide(const char *str, int index, char **s1, char **s2);
+void strpush(char **str, char c);
+char strpop(char **str);
+void strpush_string(char **str, const char *s);
 
 int str_prefix_len(const char *s1, const char *s2);
 char *common_prefix(char **str, int len);
