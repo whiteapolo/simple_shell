@@ -8,10 +8,9 @@
 
 typedef struct {
 	char *file_path;
-	dlist_t *lst;
-	dlist_t *ptr;
-	dlist_t *end;
-	Sbuilder *command_buffer;
+	Sbuilder *buffer;
+	int buff_index;
+	Sbuilder *append_buffer;
 } HistoryEntry;
 
 void HistorySave(HistoryEntry *hist);

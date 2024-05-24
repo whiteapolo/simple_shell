@@ -121,16 +121,12 @@ void bindingSpace(Line *line, u16 key)
 
 void bindingArrowUp(Line *line, u16 key)
 {
-	const char *command = HistoryBackwars(g_hist_entry);
-	if (command != NULL)
-		LineSetString(line, command, 0);
+	LineSetString(line, HistoryBackwars(g_hist_entry), 0);
 }
 
 void bindingArrowDown(Line *line, u16 key)
 {
-	const char *command = HistoryFoward(g_hist_entry);
-	if (command != NULL)
-		LineSetString(line, command, 0);
+	LineSetString(line, HistoryFoward(g_hist_entry), 0);
 }
 
 void bindingArrowRight(Line *line, u16 key)

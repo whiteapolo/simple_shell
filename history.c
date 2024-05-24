@@ -11,25 +11,20 @@ static const char *empty_string = "";
 
 void loadHistory(HistoryEntry *hist)
 {
-	dlist_init(&hist->lst);
-	dlist_push(&hist->lst, NULL);
-	hist->end = hist->lst;
+	SbuilderAppend(hist->buffer, empty_string);
 	FILE *fp = fopen(hist->file_path, "a+");
 	if (fp == NULL) {
 		printf("Cannot open history file at: \"%s\"\n", hist->file_path);
-		exit(1);
+		return;
 	}
 	fseek(fp, 0, SEEK_SET);
 	char buff[1024];
 	while (fgets(buff, 1024, fp)) {
 		buff[strlen(buff) - 1] = '\0';
-		dlist_insert_after(hist->end, strdup(buff));
-		hist->end = hist->end->next;
+		SbuilderAppend(hist->buffer, buff);
 	}
 
-	dlist_insert_after(hist->end, NULL);
-
-	hist->ptr = hist->end->next;
+	hist->buff_index = hist->buffer->size - 1;
 
 	fclose(fp);
 }
@@ -37,58 +32,52 @@ void loadHistory(HistoryEntry *hist)
 void HistoryInit(HistoryEntry *hist, const char *file_path)
 {
 	hist->file_path = strdup(file_path);
+	hist->buffer = SbuilderCreate();
+	hist->append_buffer = SbuilderCreate();
+	hist->buff_index = -1;
 	loadHistory(hist);
-	hist->command_buffer = SbuilderCreate();
 }
 
 void HistoryAppend(HistoryEntry *hist, const char *command)
 {
-	dlist_insert_after(hist->end, strdup(command));
-	hist->end = hist->end->next;
-	hist->ptr = hist->end->next;
-	SbuilderAppend(hist->command_buffer, command);
+	SbuilderAppend(hist->append_buffer, command);
+	SbuilderAppend(hist->buffer, command);
+	hist->buff_index = hist->buffer->size - 1;
 }
 
 const char *HistoryBackwars(HistoryEntry *hist)
 {
-	if (hist->ptr->pre->info == NULL)
-		return NULL;
-	hist->ptr = hist->ptr->pre;
-	return hist->ptr->info;
+	if (!IN_BOUNDRY(hist->buff_index, 1, hist->buffer->size - 1))
+		return empty_string;
+	return hist->buffer->data[hist->buff_index--];
 }
 
 const char *HistoryFoward(HistoryEntry *hist)
 {
-	if (hist->ptr->next == NULL) {
+	if (!IN_BOUNDRY(hist->buff_index, hist->buff_index, hist->buffer->size - 2))
 		return empty_string;
-	} else if (hist->ptr->next->info == NULL) {
-		hist->ptr = hist->ptr->next;
-		return empty_string;
-	}
-
-	hist->ptr = hist->ptr->next;
-	return hist->ptr->info;
+	return hist->buffer->data[++hist->buff_index];
 }
 
 void HistoryFree(HistoryEntry *hist)
 {
-	if (hist->command_buffer != NULL)
-		SbuilderDestroy(hist->command_buffer);
+	SbuilderDestroy(hist->buffer);
+	SbuilderDestroy(hist->append_buffer);
+	free(hist->file_path);
 }
 
 void HistorySave(HistoryEntry *hist)
 {
-	if (hist->command_buffer == NULL || hist->command_buffer->size == 0)
+	if (hist->append_buffer == NULL || hist->append_buffer->size == 0)
 		return;
 
 	FILE *fp = fopen(hist->file_path, "a");
 	if (fp == NULL) {
-		printf("Cannot open history file at: \"%s\"\n", hist->file_path);
-		exit(1);
+		return;
 	}
 
-	char **commands = SbuilderToStrings(hist->command_buffer, true);
-	hist->command_buffer = SbuilderCreate();
+	char **commands = SbuilderToStrings(hist->append_buffer, true);
+	hist->append_buffer = SbuilderCreate();
 
 	int i = 0;
 	while (commands[i]) {
